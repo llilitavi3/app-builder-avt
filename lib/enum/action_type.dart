@@ -1,0 +1,1 @@
+enum ActionType { internal, external, email, phone, share, openModal }

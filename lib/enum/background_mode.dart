@@ -1,0 +1,1 @@
+enum BackgroundMode { none, color, image }

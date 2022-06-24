@@ -1,0 +1,46 @@
+workflows:
+  android-workflow:
+    name: SiteNative Android Workflow
+    max_build_duration: 30
+    environment:
+      vars:
+        FCI_KEYSTORE_PATH: /tmp/keystore.keystore
+        FCI_KEYSTORE: /signs/test.jks
+        FCI_KEYSTORE_PASSWORD: password
+        FCI_KEY_PASSWORD: password
+        FCI_KEY_ALIAS: test
+        PACKAGE_NAME: "io.sitenative.app.prod_app"
+        APP_UID: "test_uid"
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up key properties
+        script: |
+          echo $FCI_KEYSTORE | base64 --decode > /tmp/keystore.keystore
+          cat >> "$FCI_BUILD_DIR/android/key.properties" <<EOF
+          storePassword=$FCI_KEYSTORE_PASSWORD
+          keyPassword=$FCI_KEY_PASSWORD
+          keyAlias=$FCI_KEY_ALIAS
+          storeFile=/tmp/keystore.keystore
+          EOF
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$FCI_BUILD_DIR/android/local.properties"
+      - name: Get Flutter packages
+        script: |
+          cd . && flutter packages pub get
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+      # - name: Build APK with Flutter
+      #   script: |
+      #     cd . && flutter build apk --release --build-name=1.0.0 --build-number=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))
+      - name: Build AAB with Flutter
+        script: |
+          cd . && flutter build appbundle --release --build-name=1.0.0 --build-number=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - flutter_drive.log

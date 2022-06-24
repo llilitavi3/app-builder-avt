@@ -1,0 +1,1 @@
+enum LoadIndicator { none, spinner, line }

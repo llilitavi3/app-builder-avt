@@ -1,0 +1,1 @@
+enum Template { drawer, tabs, bar, blank }
